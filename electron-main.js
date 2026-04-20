@@ -16,15 +16,19 @@ function createWindow () {
     }
   });
 
-  // Check if we're in dev mode or prod mode
-  // In prod, load the local dist/index.html
-  // But wait, the user's HTML requires a server? NO, Vite dist can run on file:// if base is relative.
-  // Wait, Vite defaults to absolute paths `/assets/...`. We MUST set base to `./` for file:// to work!
+  const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
   
-  mainWindow.loadFile(path.join(__dirname, 'dist', 'index.html'));
-  
-  // Optional: open dev tools
-  // mainWindow.webContents.openDevTools();
+  if (isDev) {
+    // In development, load from the Vite dev server
+    mainWindow.loadURL('http://localhost:3000').catch(() => {
+      console.log("Vite dev server not running, falling back to local file.");
+      mainWindow.loadFile(path.join(__dirname, 'dist', 'index.html'));
+    });
+    mainWindow.webContents.openDevTools();
+  } else {
+    // In production, load the built files
+    mainWindow.loadFile(path.join(__dirname, 'dist', 'index.html'));
+  }
 }
 
 app.whenReady().then(() => {

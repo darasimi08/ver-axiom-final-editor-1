@@ -11,9 +11,13 @@ export const PPTPanel = ({ onClose }: { onClose: () => void }) => {
   const [downloadPath, setDownloadPath] = useState('');
   const [previewMode, setPreviewMode] = useState(false);
 
+  const [errorHeader, setErrorHeader] = useState('');
+  const [pptxWarning, setPptxWarning] = useState('');
+
   const generateOutline = async () => {
     if (!topic.trim()) return;
     setGenerating(true);
+    setPptxWarning('');
     try {
       const resp = await fetch((import.meta.env.VITE_API_BASE_URL || '') + '/api/generate/ppt/outline', {
         method: 'POST',
@@ -23,12 +27,13 @@ export const PPTPanel = ({ onClose }: { onClose: () => void }) => {
       const data = await resp.json();
       setOutline(data.outline || []);
       setPreviewMode(true);
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error(e); setErrorHeader('Failed to connect to AI engine.'); }
     finally { setGenerating(false); }
   };
 
   const generateFull = async () => {
     setGenerating(true);
+    setPptxWarning('');
     try {
       const resp = await fetch((import.meta.env.VITE_API_BASE_URL || '') + '/api/generate/ppt', {
         method: 'POST',
@@ -38,7 +43,8 @@ export const PPTPanel = ({ onClose }: { onClose: () => void }) => {
       const data = await resp.json();
       if (data.file_path) setDownloadPath(data.file_path);
       if (data.outline) setOutline(data.outline);
-    } catch (e) { console.error(e); }
+      if (data.warning) setPptxWarning(data.warning);
+    } catch (e) { console.error(e); setErrorHeader('Full generation failed.'); }
     finally { setGenerating(false); }
   };
 
@@ -97,12 +103,24 @@ export const PPTPanel = ({ onClose }: { onClose: () => void }) => {
               </div>
             </div>
 
+            {pptxWarning && (
+              <div style={{ padding: '10px', background: 'rgba(255,170,0,0.1)', color: '#ffaa00', borderRadius: '6px', fontSize: '0.7rem', border: '1px solid rgba(255,170,0,0.3)' }}>
+                ⚠️ {pptxWarning}
+              </div>
+            )}
+
+            {errorHeader && (
+              <div style={{ padding: '10px', background: 'rgba(255,50,50,0.1)', color: '#ff4444', borderRadius: '6px', fontSize: '0.7rem', border: '1px solid rgba(255,50,50,0.3)' }}>
+                ❌ {errorHeader}
+              </div>
+            )}
+
             <button onClick={generateOutline} disabled={generating || !topic.trim()}
               style={{ width: '100%', padding: '12px', background: colors.accent, color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', opacity: generating ? 0.6 : 1 }}>
               {generating ? '⏳ Generating...' : '✨ Preview Outline'}
             </button>
 
-            {outline.length > 0 && (
+            {outline.length > 0 && !downloadPath && (
               <button onClick={generateFull} disabled={generating}
                 style={{ width: '100%', padding: '12px', background: colors.accentGreen, color: '#000', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>
                 📥 Generate & Download .PPTX
@@ -112,7 +130,7 @@ export const PPTPanel = ({ onClose }: { onClose: () => void }) => {
             {downloadPath && (
               <a href={`${import.meta.env.VITE_API_BASE_URL || ''}/${downloadPath}`} target="_blank" rel="noreferrer"
                 style={{ display: 'block', textAlign: 'center', padding: '10px', background: colors.accentCyan, color: '#000', borderRadius: '8px', fontWeight: 700, fontSize: '0.75rem', textDecoration: 'none' }}>
-                ⬇ Download File
+                ⬇ Download Ready
               </a>
             )}
           </div>

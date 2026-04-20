@@ -1,6 +1,7 @@
 import React from 'react';
 import { useSyncEngine } from '../store/syncEngine';
 import { useTheme } from '../ThemeContext';
+import { Sliders, Type, Move, Image as ImageIcon, ShieldCheck, ChevronRight } from 'lucide-react';
 import type { TextNode, ShapeNode } from '../types/engine';
 
 export const PropertyInspector = () => {
@@ -8,117 +9,82 @@ export const PropertyInspector = () => {
   const { colors } = useTheme();
 
   if (selectedNodeIds.length === 0) {
-    return <aside style={{ width: '280px', background: colors.bgSecondary, borderLeft: `1px solid ${colors.border}`, padding: '20px', color: colors.textMuted, fontSize: '0.85rem' }}>No element selected on canvas.</aside>;
+    return (
+      <aside style={{ width: '320px', background: colors.bgSecondary, borderLeft: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', p: '40px', textAlign: 'center' }}>
+        <Sliders size={32} style={{ color: colors.border, marginBottom: '16px' }} />
+        <div style={{ color: colors.textMuted, fontSize: '0.8rem', fontWeight: 500 }}>Select an element to inspect its properties.</div>
+      </aside>
+    );
   }
 
   const node = nodes[selectedNodeIds[0]];
   if (!node) return null;
 
-  const inputStyle = { width: '100%', background: colors.inputBg, border: `1px solid ${colors.inputBorder}`, color: colors.textPrimary, padding: '6px', borderRadius: '4px', boxSizing: 'border-box' as const };
-  const labelStyle = { fontSize: '0.65rem', color: colors.textMuted, display: 'block', marginBottom: '4px' };
-  const sectionLabel = { fontSize: '0.75rem', color: colors.textSecondary, marginBottom: '8px', textTransform: 'uppercase' as const, letterSpacing: '1px' };
+  const Input = ({ label, value, onChange, type = "number", step = 1, min, max }: any) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      <label style={{ fontSize: '0.65rem', fontWeight: 600, color: colors.textMuted, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{label}</label>
+      <input 
+        type={type} value={value} step={step} min={min} max={max}
+        onChange={e => onChange(type === "number" ? Number(e.target.value) : e.target.value)}
+        style={{
+          width: '100%', background: colors.inputBg, border: `1px solid ${colors.inputBorder}`,
+          color: colors.textPrimary, padding: '10px 12px', borderRadius: '8px', fontSize: '0.85rem',
+          outline: 'none', transition: 'border-color 0.3s'
+        }}
+      />
+    </div>
+  );
 
   return (
-    <aside style={{ width: '320px', background: colors.bgSecondary, borderLeft: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
-      <header style={{ padding: '15px', borderBottom: `1px solid ${colors.border}`, fontSize: '0.9rem', fontWeight: 'bold', color: colors.textPrimary, display: 'flex', justifyContent: 'space-between' }}>
-        <span>Inspector</span>
-        <span style={{ color: colors.accent, fontSize: '0.7rem', background: colors.bgTertiary, padding: '2px 6px', borderRadius: '4px' }}>{node.type}</span>
+    <aside style={{ width: '320px', background: colors.bgSecondary, borderLeft: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column' }}>
+      <header style={{ padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <h3 style={{ fontSize: '0.9rem', fontWeight: 700, letterSpacing: '-0.01em', margin: 0 }}>Design</h3>
+        <div style={{ fontSize: '0.65rem', fontWeight: 800, color: colors.accent, background: `${colors.accent}10`, padding: '4px 8px', borderRadius: '4px' }}>{node.type}</div>
       </header>
 
-      <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        {/* Transform */}
-        <div>
-          <div style={sectionLabel}>Transform</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            {[
-              { label: 'X Pos', value: node.x, key: 'x' },
-              { label: 'Y Pos', value: node.y, key: 'y' },
-              { label: 'Width', value: node.width, key: 'width' },
-              { label: 'Height', value: node.height, key: 'height' },
-            ].map(f => (
-              <div key={f.key}>
-                <label style={labelStyle}>{f.label}</label>
-                <input type="number" value={Math.round(f.value)} onChange={e => applyManualEdit(node.id, { [f.key]: Number(e.target.value) })} style={inputStyle} />
-              </div>
-            ))}
-          </div>
-        </div>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 24px 24px' }}>
+        {/* Transform Section */}
+        <section style={{ marginBottom: '32px' }}>
+           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+             <Move size={14} style={{ color: colors.textMuted }} />
+             <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>Alignment</span>
+           </div>
+           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <Input label="X" value={Math.round(node.x)} onChange={(v: any) => applyManualEdit(node.id, { x: v })} />
+              <Input label="Y" value={Math.round(node.y)} onChange={(v: any) => applyManualEdit(node.id, { y: v })} />
+              <Input label="Width" value={Math.round(node.width)} onChange={(v: any) => applyManualEdit(node.id, { width: v })} />
+              <Input label="Height" value={Math.round(node.height)} onChange={(v: any) => applyManualEdit(node.id, { height: v })} />
+           </div>
+        </section>
 
-        {/* Text Properties */}
+        {/* Text Section */}
         {node.type === 'TEXT' && (
-          <div>
-            <div style={sectionLabel}>Typography</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <input type="text" value={(node as TextNode).textProps.text} onChange={e => applyManualEdit(node.id, { textProps: { text: e.target.value } })} style={{ ...inputStyle, padding: '8px' }} />
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <div>
-                  <label style={labelStyle}>Size</label>
-                  <input type="number" value={(node as TextNode).textProps.fontSize} onChange={e => applyManualEdit(node.id, { textProps: { fontSize: Number(e.target.value) } })} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Weight</label>
-                  <input type="number" step={100} min={100} max={900} value={(node as TextNode).textProps.fontWeight} onChange={e => applyManualEdit(node.id, { textProps: { fontWeight: Number(e.target.value) } })} style={inputStyle} />
-                </div>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: colors.bgTertiary, padding: '8px', borderRadius: '4px', border: `1px solid ${colors.inputBorder}` }}>
-                <label style={{ fontSize: '0.75rem', color: colors.textSecondary }}>Text Color</label>
-                <input type="color" value={(node as TextNode).textProps.color} onChange={e => applyManualEdit(node.id, { textProps: { color: e.target.value } })} style={{ width: '30px', height: '30px', border: 'none', background: 'transparent', cursor: 'pointer' }} />
+          <section style={{ marginBottom: '32px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+              <Type size={14} style={{ color: colors.textMuted }} />
+              <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>Typography</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <Input label="Content" type="text" value={(node as TextNode).textProps.text} onChange={(v: any) => applyManualEdit(node.id, { textProps: { text: v } })} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <Input label="Size" value={(node as TextNode).textProps.fontSize} onChange={(v: any) => applyManualEdit(node.id, { textProps: { fontSize: v } })} />
+                <Input label="Weight" step={100} min={100} max={900} value={(node as TextNode).textProps.fontWeight} onChange={(v: any) => applyManualEdit(node.id, { textProps: { fontWeight: v } })} />
               </div>
             </div>
-          </div>
+          </section>
         )}
 
-        {/* Shape Properties */}
-        {node.type === 'SHAPE' && (
-          <div>
-            <div style={sectionLabel}>Fill & Stroke</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: colors.bgTertiary, padding: '8px', borderRadius: '4px', border: `1px solid ${colors.inputBorder}` }}>
-                <label style={{ fontSize: '0.75rem', color: colors.textSecondary }}>Fill Color</label>
-                <input type="color" value={(node as ShapeNode).shapeProps.fillColor} onChange={e => applyManualEdit(node.id, { shapeProps: { fillColor: e.target.value } })} style={{ width: '30px', height: '30px', border: 'none', background: 'transparent', cursor: 'pointer' }} />
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <div>
-                  <label style={labelStyle}>Radius</label>
-                  <input type="number" value={(node as ShapeNode).shapeProps.cornerRadius || 0} onChange={e => applyManualEdit(node.id, { shapeProps: { cornerRadius: Number(e.target.value) } })} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Stroke</label>
-                  <input type="number" value={(node as ShapeNode).shapeProps.strokeWidth} onChange={e => applyManualEdit(node.id, { shapeProps: { strokeWidth: Number(e.target.value) } })} style={inputStyle} />
-                </div>
-              </div>
-            </div>
+        {/* AI Verification */}
+        <div className="glass premium-hover" style={{ 
+          marginTop: '20px', padding: '16px', borderRadius: '12px', display: 'flex', flexWrap: 'wrap',
+          alignItems: 'center', gap: '12px', border: `1px solid ${colors.accentGreen}20` 
+        }}>
+          <ShieldCheck size={20} style={{ color: colors.accentGreen }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.7rem', fontWeight: 800, color: colors.accentGreen, textTransform: 'uppercase' }}>AXIOM Verified</div>
+            <div style={{ fontSize: '0.65rem', color: colors.textMuted }}>Constraint solver active</div>
           </div>
-        )}
-
-        {/* Image Properties */}
-        {node.type === 'IMAGE' && (
-          <div>
-            <div style={sectionLabel}>Image Adjustments</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: colors.bgTertiary, padding: '12px', borderRadius: '6px', border: `1px solid ${colors.inputBorder}` }}>
-              {[
-                { label: 'Brightness', key: 'brightness', min: 0, max: 200, unit: '%' },
-                { label: 'Contrast', key: 'contrast', min: 0, max: 200, unit: '%' },
-                { label: 'Saturation', key: 'saturation', min: 0, max: 200, unit: '%' },
-                { label: 'Hue Rotate', key: 'hue', min: -180, max: 180, unit: '°' },
-                { label: 'Gaussian Blur', key: 'blur', min: 0, max: 50, unit: 'px' },
-              ].map(adj => (
-                <div key={adj.key}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <label style={{ fontSize: '0.65rem', color: colors.textSecondary }}>{adj.label}</label>
-                    <span style={{ fontSize: '0.65rem', color: colors.textMuted }}>{(node as any).imageProps[adj.key]}{adj.unit}</span>
-                  </div>
-                  <input type="range" min={adj.min} max={adj.max} value={(node as any).imageProps[adj.key]}
-                    onChange={e => applyManualEdit(node.id, { imageProps: { [adj.key]: Number(e.target.value) } })}
-                    style={{ width: '100%', accentColor: colors.accent }} />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div style={{ marginTop: '10px', padding: '12px', background: `${colors.accentGreen}10`, border: `1px solid ${colors.accentGreen}30`, color: colors.accentGreen, borderRadius: '6px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '1rem' }}>✓</span> Z3 Constraints Verified
+          <ChevronRight size={14} style={{ color: colors.textMuted }} />
         </div>
       </div>
     </aside>

@@ -10,16 +10,54 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { overflow: hidden; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+      body { 
+        overflow: hidden; 
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
       html[data-theme="dark"] body { background: #050507; color: #f0f0f5; }
       html[data-theme="light"] body { background: #f5f5f7; color: #1d1d1f; }
-      ::-webkit-scrollbar { width: 6px; height: 6px; }
+      
+      /* Premium Smooth Scrollbar */
+      ::-webkit-scrollbar { width: 4px; height: 4px; }
       ::-webkit-scrollbar-track { background: transparent; }
-      ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-      html[data-theme="light"] ::-webkit-scrollbar-thumb { background: #bbb; }
-      ::-webkit-scrollbar-thumb:hover { background: #555; }
+      ::-webkit-scrollbar-thumb { background: rgba(120, 120, 140, 0.2); border-radius: 10px; transition: background 0.3s ease; }
+      ::-webkit-scrollbar-thumb:hover { background: rgba(120, 120, 140, 0.5); }
+      
+      /* Global Transitions & Effects */
+      * { transition: background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+      
+      .glass {
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        background-color: rgba(10, 10, 13, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      
+      .premium-hover {
+        transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+      }
+      .premium-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        border-color: rgba(255, 255, 255, 0.2) !important;
+      }
+      
+      /* Animation Keyframes */
+      @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
+      }
+      
+      @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+      }
+
+      ::selection { background: #00d2ff40; color: #fff; }
       input, textarea, select, button { font-family: inherit; }
-      ::selection { background: #7928CA40; }
     </style>
   </head>
   <body>

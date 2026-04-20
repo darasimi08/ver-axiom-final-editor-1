@@ -107,20 +107,30 @@ class Model3DEngine:
             bin_data += struct.pack('<H', i)
         
         gltf_json = json.dumps(gltf).encode('utf-8')
-        # Pad JSON to 4-byte boundary
+        # Pad JSON to 4-byte boundary with spaces
         while len(gltf_json) % 4 != 0:
             gltf_json += b' '
+        
+        # Pad BIN to 4-byte boundary with nulls
         while len(bin_data) % 4 != 0:
             bin_data += b'\x00'
         
-        # GLB header
-        total_length = 12 + 8 + len(gltf_json) + 8 + len(bin_data)
+        # GLB header: magic (4), version (4), length (4) = 12 bytes
+        # Each chunk: length (4), type (4), data (V) = 8 + V bytes
+        total_length = 12 + (8 + len(gltf_json)) + (8 + len(bin_data))
+        
         header = struct.pack('<4sII', b'glTF', 2, total_length)
-        json_chunk = struct.pack('<I4s', len(gltf_json), b'JSON') + gltf_json
-        bin_chunk = struct.pack('<I4s', len(bin_data), b'BIN\x00') + bin_data
+        
+        # JSON chunk: type is 'JSON'
+        json_chunk_header = struct.pack('<I4s', len(gltf_json), b'JSON')
+        
+        # BIN chunk: type is 'BIN\00' (must be exactly 4 bytes)
+        bin_chunk_header = struct.pack('<I4s', len(bin_data), b'BIN\x00')
         
         with open(filepath, 'wb') as f:
-            f.write(header + json_chunk + bin_chunk)
+            f.write(header)
+            f.write(json_chunk_header + gltf_json)
+            f.write(bin_chunk_header + bin_data)
         
         return {
             "status": "success",
@@ -181,6 +191,7 @@ class Model3DEngine:
     def launch_blender(self, glb_path: str = None):
         """Attempt to launch Blender with the given GLB file."""
         blender_paths = [
+            os.getenv("BLENDER_PATH"),
             r"C:\Program Files\Blender Foundation\Blender 4.2\blender.exe",
             r"C:\Program Files\Blender Foundation\Blender 4.1\blender.exe",
             r"C:\Program Files\Blender Foundation\Blender 4.0\blender.exe",
@@ -189,7 +200,7 @@ class Model3DEngine:
         
         blender_exe = None
         for path in blender_paths:
-            if os.path.exists(path):
+            if path and os.path.exists(path):
                 blender_exe = path
                 break
         

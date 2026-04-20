@@ -2,7 +2,7 @@
   "name": "axiom-frontend",
   "private": true,
   "version": "0.1.0",
-  "main": "electron-main.cjs",
+  "main": "electron-main.js",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -38,7 +38,7 @@
     },
     "files": [
       "dist/**/*",
-      "electron-main.cjs",
+      "electron-main.js",
       "package.json"
     ]
   }
